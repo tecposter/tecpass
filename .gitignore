@@ -1,0 +1,6 @@
+/target
+/dev
+*passwords.csv
+exported_passes.txt
+*.bk
+*.db
