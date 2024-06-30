@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# pass: the standard unix password manager
+# https://www.passwordstore.org/
 # export passwords to external file
 
 shopt -s nullglob globstar

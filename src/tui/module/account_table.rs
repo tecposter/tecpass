@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
-  layout::{Constraint, Rect},
+  layout::{Constraint, Layout, Rect},
   style::{Style, Stylize},
   widgets::{Block, Row, Table, TableState},
   Frame,
@@ -206,13 +206,13 @@ impl AccountTable {
   //   Ok(())
   // }
 
-  pub fn help_text(&self) -> String {
-    if !self.query.is_active() {
-      "Down, j: next; Up, k: prev; /: filter".to_owned()
-    } else {
-      "Esc, Enter: quit filter".to_owned()
-    }
-  }
+  // pub fn help_text(&self) -> String {
+  //   if !self.query.is_active() {
+  //     "Down, j: next; Up, k: prev; /: filter".to_owned()
+  //   } else {
+  //     "Esc, Enter: quit filter".to_owned()
+  //   }
+  // }
 
   pub(crate) fn selected(&mut self) -> Option<&Account> {
     // println!("xxxxxxxxxxxxxxxxxx  {:?}", self.state.selected());
@@ -229,12 +229,9 @@ impl AccountTable {
   }
 }
 
-pub fn draw_account_table(
-  f: &mut Frame,
-  at: &mut AccountTable,
-  main_area: Rect,
-  search_area: Rect,
-) {
+pub fn draw_account_table(f: &mut Frame, at: &mut AccountTable, area: Rect) {
+  let [main_area, search_area] =
+    Layout::vertical([Constraint::Min(3), Constraint::Length(1)]).areas(area);
   let rows: Vec<Row> = at
     .items
     .iter()

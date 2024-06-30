@@ -25,7 +25,7 @@ pub struct Auth {
 
 impl Auth {
   pub fn build(config_path: impl AsRef<Path>) -> TecResult<Self> {
-    let key_path = config_path.as_ref().join("tecpass.key");
+    let key_path = config_path.as_ref().join("tecpass.pub.key");
 
     let key_store = KeyStore::new(key_path);
     let mode = {
@@ -36,7 +36,6 @@ impl Auth {
       }
     };
     let mut auth = Self {
-      // account_repo: AccountRepo::new(conn),
       key_store,
       mode: AuthMode::Login,
       quiting: false,
@@ -47,7 +46,7 @@ impl Auth {
         .with_min(8)
         .with_max(32)
         .with_active(),
-      reg: ConfirmPassword::default(),
+      reg: ConfirmPassword::default().with_title("Register password"),
     };
     auth.change_mode(mode);
     Ok(auth)
@@ -86,7 +85,6 @@ impl Auth {
         let res = self.key_store.get_key(pwd.as_bytes());
         if let Ok(key) = res {
           self.key = Some(key);
-          // self.change_mode(AppMode::Table);
         } else {
           self.login.set_msg("wrong password");
         }
@@ -115,9 +113,7 @@ pub fn draw_auth(f: &mut Frame, auth: &mut Auth) {
   let area = f.size();
 
   match auth.mode {
-    AuthMode::Login => {
-      draw_input(f, &auth.login, area);
-    }
+    AuthMode::Login => draw_input(f, &auth.login, area),
     AuthMode::Reg => draw_confirm_password(f, &auth.reg, area),
   }
 }

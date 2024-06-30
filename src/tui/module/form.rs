@@ -1,5 +1,4 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use crypto_common::rand_core::block;
 use ratatui::{
   layout::{Constraint, Layout, Rect},
   style::{Color, Style},
@@ -27,7 +26,6 @@ pub struct Form {
   username: Input,
   password: Input,
   confirm: Input,
-  msg: String,
 }
 
 impl Default for Form {
@@ -49,7 +47,6 @@ impl Default for Form {
         .with_label("confirm: ")
         .with_min(8)
         .with_max(32),
-      msg: "".to_owned(),
     }
   }
 }
@@ -179,11 +176,12 @@ pub fn draw_form(f: &mut Frame, form: &Form, area: Rect) {
   let inner_area = block.inner(area);
   f.render_widget(block, area);
 
+  let line_width = inner_area.width;
   let [url_area, username_area, password_area, confirm_area] = Layout::vertical([
-    Constraint::Length(2),
-    Constraint::Length(1),
-    Constraint::Length(1),
-    Constraint::Length(1),
+    Constraint::Length(form.url.width().div_ceil(line_width as usize) as u16),
+    Constraint::Length(form.username.width().div_ceil(line_width as usize) as u16),
+    Constraint::Length(form.password.width().div_ceil(line_width as usize) as u16),
+    Constraint::Length(form.confirm.width().div_ceil(line_width as usize) as u16),
   ])
   .areas(inner_area);
 

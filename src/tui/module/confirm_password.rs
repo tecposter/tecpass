@@ -1,8 +1,9 @@
+use std::u16;
+
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
   layout::{Constraint, Layout, Rect},
-  style::{Style, Stylize},
-  text::Line,
+  widgets::{Block, Borders},
   Frame,
 };
 
@@ -11,14 +12,16 @@ use crate::common::TecResult;
 use super::{draw_input, Input};
 
 pub struct ConfirmPassword {
+  title: String,
   password: Input,
   confirm: Input,
-  msg: String,
+  // msg: String,
 }
 
 impl Default for ConfirmPassword {
   fn default() -> Self {
     Self {
+      title: "".to_string(),
       password: Input::default()
         .with_mask()
         .with_label("password: ")
@@ -30,12 +33,16 @@ impl Default for ConfirmPassword {
         .with_label("confirm: ")
         .with_min(8)
         .with_max(32),
-      msg: "".to_owned(),
     }
   }
 }
 
 impl ConfirmPassword {
+  pub fn with_title(mut self, title: impl Into<String>) -> Self {
+    self.title = title.into();
+    self
+  }
+
   pub fn on_key_event(&mut self, key_event: KeyEvent) -> TecResult<()> {
     // press `Tab` to switch input
     if key_event.kind == KeyEventKind::Press && key_event.code == KeyCode::Tab {
@@ -55,9 +62,9 @@ impl ConfirmPassword {
       }
     };
     curr.on_key_event(key_event)?;
-    if !self.msg.is_empty() {
-      self.msg = "".to_owned();
-    }
+    // if !self.msg.is_empty() {
+    //   self.msg = "".to_owned();
+    // }
     Ok(())
   }
 
@@ -66,14 +73,15 @@ impl ConfirmPassword {
       return false;
     }
     if self.password.content().eq(self.confirm.content()) {
-      if !self.msg.is_empty() {
-        self.msg = "".to_owned();
-      }
+      // if !self.msg.is_empty() {
+      //   self.msg = "".to_owned();
+      // }
       return true;
     } else {
-      if self.msg.is_empty() {
-        self.msg = "Not match".to_owned();
-      }
+      self.confirm.set_msg("Not match");
+      // if self.msg.is_empty() {
+      //   self.msg = "Not match".to_owned();
+      // }
       return false;
     }
   }
@@ -84,13 +92,19 @@ impl ConfirmPassword {
 }
 
 pub fn draw_confirm_password(f: &mut Frame, state: &ConfirmPassword, area: Rect) {
-  let [pwd_area, confirm_area, msg_area] = Layout::vertical([
-    Constraint::Max(2),
-    Constraint::Max(2),
-    Constraint::Length(1),
+  let block = Block::new()
+    .title(state.title.as_str())
+    .borders(Borders::ALL);
+  let inner_area = block.inner(area);
+  f.render_widget(block, area);
+
+  let pwd_height = state.password.width().div_ceil(area.width as usize) as u16;
+  let confirm_height = state.confirm.width().div_ceil(area.width as usize) as u16;
+  let [pwd_area, confirm_area] = Layout::vertical([
+    Constraint::Length(pwd_height),
+    Constraint::Length(confirm_height),
   ])
-  .areas(area);
+  .areas(inner_area);
   draw_input(f, &state.password, pwd_area);
   draw_input(f, &state.confirm, confirm_area);
-  f.render_widget(Line::styled(&state.msg[..], Style::new().red()), msg_area);
 }

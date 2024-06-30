@@ -1,8 +1,4 @@
-use std::{
-  path::Path,
-  rc::Rc,
-  time::{SystemTime, UNIX_EPOCH},
-};
+use std::{path::Path, rc::Rc};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
@@ -23,7 +19,7 @@ use super::{
   module::{
     draw_account_table, draw_confirm, draw_form, draw_view, AccountTable, Confirm, Form, View,
   },
-  util::copy_content,
+  util::{copy_content, current_millis},
 };
 
 enum AppMode {
@@ -67,8 +63,10 @@ impl App {
       form: Form::default(),
       to_del: Confirm::default().with_content("To delete the selected account?"),
     };
-    let accounts = app.account_repo.all()?;
-    app.account_table.load(accounts);
+
+    app.change_mode(AppMode::Table);
+    app.load_accounts()?;
+
     // app.change_mode(mode);
     Ok(app)
   }
@@ -83,8 +81,6 @@ impl App {
       return Ok(());
     }
     match self.mode {
-      // AppMode::Login => self.login_on_key_event(key_event)?,
-      // AppMode::Reg => self.reg_on_key_envent(key_event)?,
       AppMode::Table => self.table_on_key_envent(key_event)?,
       AppMode::View => self.view_on_key_event(key_event)?,
       AppMode::Add => self.add_on_key_event(key_event)?,
@@ -149,6 +145,7 @@ impl App {
             }
           }
           KeyCode::Char('a') => {
+            self.form.reset();
             self.change_mode(AppMode::Add);
           }
           KeyCode::Char('e') => {
@@ -203,7 +200,7 @@ impl App {
         ..
       } => {
         if self.form.validate() {
-          let current = current_timestamp();
+          let current = current_millis() as usize;
           let acc = Account {
             id: 0,
             url: self.form.url().to_string(),
@@ -220,7 +217,7 @@ impl App {
           };
           self.pwd_repo.add(&pwd)?;
 
-          self.account_table.load(self.account_repo.all()?);
+          self.load_accounts()?;
           self.account_table.select_by_aid(aid);
 
           self.form.reset();
@@ -249,7 +246,7 @@ impl App {
         ..
       } => {
         if self.form.validate() {
-          let current = current_timestamp();
+          let current = current_millis() as usize;
           if let Some(selected) = self.account_table.selected() {
             let aid = selected.id;
             let acc = Account {
@@ -268,7 +265,8 @@ impl App {
             };
             self.pwd_repo.add(&pwd)?;
 
-            self.account_table.load(self.account_repo.all()?);
+            // self.account_table.load(self.account_repo.all()?);
+            self.load_accounts()?;
             self.account_table.select_by_aid(aid);
 
             self.form.reset();
@@ -312,13 +310,23 @@ impl App {
   fn change_mode(&mut self, mode: AppMode) {
     self.mode = mode;
     match self.mode {
-      // AppMode::Login => self.help_text = "login".to_owned(),
-      // AppMode::Reg => self.help_text = "reg".to_owned(),
-      AppMode::Table => self.help_text = "table".to_owned(),
-      AppMode::View => self.help_text = "view".to_owned(),
-      AppMode::Add => self.help_text = "add".to_owned(),
-      AppMode::Del => self.help_text = "delete".to_owned(),
-      AppMode::Edit => self.help_text = "edit".to_owned(),
+      AppMode::Table => {
+        self.help_text =
+          "/: filter, a: add, e: edit, d: delete, c: copy password, j: next, k: prev, l/enter: view, ctrl-c: quit"
+            .to_owned()
+      }
+      AppMode::View => {
+        self.help_text = "View Account - c: copy, x: show/hide passwords, q/esc: back".to_owned()
+      }
+      AppMode::Add => {
+        self.help_text =
+          "Eidt Account - ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
+      }
+      AppMode::Del => self.help_text = "Delete Account - esc: back".to_owned(),
+      AppMode::Edit => {
+        self.help_text =
+          "Edit Account - ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
+      }
     }
   }
 
@@ -331,17 +339,23 @@ impl App {
     }
     Ok(())
   }
+
+  fn load_accounts(&mut self) -> TecResult<()> {
+    let accounts = self.account_repo.all()?;
+    self.account_table.load(accounts);
+    Ok(())
+  }
 }
 
 pub fn draw_app(f: &mut Frame, app: &mut App) {
-  let [main_area, search_area, help_area] = Layout::vertical([
+  let [main_area, help_area] = Layout::vertical([
     Constraint::Min(3),
-    Constraint::Length(1),
+    // Constraint::Length(1),
     Constraint::Length(1),
   ])
   .areas(f.size());
 
-  draw_account_table(f, &mut app.account_table, main_area, search_area);
+  draw_account_table(f, &mut app.account_table, main_area);
 
   let pop_rect = centered_rect(60, 30, main_area);
   match app.mode {
@@ -388,10 +402,10 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     .split(popup_layout[1])[1] // Return the middle chunk
 }
 
-fn current_timestamp() -> usize {
-  let now = SystemTime::now();
-  let since_the_epoch = now
-    .duration_since(UNIX_EPOCH)
-    .expect("Clock may have gone backwards");
-  since_the_epoch.as_millis() as usize
-}
+// fn current_timestamp() -> usize {
+//   let now = SystemTime::now();
+//   let since_the_epoch = now
+//     .duration_since(UNIX_EPOCH)
+//     .expect("Clock may have gone backwards");
+//   since_the_epoch.as_millis() as usize
+// }

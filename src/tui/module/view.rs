@@ -1,18 +1,16 @@
-use std::time;
-
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
   layout::Rect,
   style::{Color, Modifier, Style, Stylize},
   text::{Line, Span},
-  widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
+  widgets::{Block, Borders, Clear, List, ListItem, ListState},
   Frame,
 };
 
 use crate::{
   common::TecResult,
   model::{Account, Pwd},
-  tui::util::copy_content,
+  tui::util::{copy_content, millis2string},
 };
 
 pub struct View {
@@ -45,12 +43,12 @@ impl View {
     self.pwds = Some(pwds);
   }
 
-  pub fn show_pwds(&mut self) {
-    self.is_masked = false;
-  }
-  pub fn hide_pwds(&mut self) {
-    self.is_masked = true;
-  }
+  // pub fn show_pwds(&mut self) {
+  //   self.is_masked = false;
+  // }
+  // pub fn hide_pwds(&mut self) {
+  //   self.is_masked = true;
+  // }
 
   pub(crate) fn on_key_event(&mut self, key_event: KeyEvent) -> TecResult<()> {
     self.symbol = "❯".into();
@@ -99,6 +97,8 @@ impl View {
           }
         }
       }
+      Some(3) => copy_content(millis2string(account.created as u64).as_bytes())?,
+      Some(4) => copy_content(millis2string(account.changed as u64).as_bytes())?,
       _ => {}
     }
     if self.state.selected().is_some() {
@@ -132,14 +132,15 @@ pub fn draw_view(f: &mut Frame, view: &mut View, area: Rect) {
     Span::raw(&account.username),
   ])
   .into();
+
   let created_item: ListItem = Line::from(vec![
     Span::styled("created: ", Style::default().bold()),
-    Span::raw(account.created.to_string()),
+    Span::raw(millis2string(account.created as u64)),
   ])
   .into();
   let changed_item: ListItem = Line::from(vec![
     Span::styled("changed: ", Style::default().bold()),
-    Span::raw(account.changed.to_string()),
+    Span::raw(millis2string(account.changed as u64)),
   ])
   .into();
 

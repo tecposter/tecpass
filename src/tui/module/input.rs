@@ -81,9 +81,9 @@ impl Input {
     &self.content
   }
 
-  pub fn label(&self) -> &str {
-    &self.label
-  }
+  // pub fn label(&self) -> &str {
+  //   &self.label
+  // }
 
   pub fn reset(&mut self) {
     self.content = "".into();
@@ -210,6 +210,10 @@ impl Input {
 
   pub(crate) fn set_content(&mut self, content: impl Into<String>) {
     self.content = content.into();
+  }
+
+  pub fn width(&self) -> usize {
+    self.content.width() + self.label.width()
   }
 }
 
