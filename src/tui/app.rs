@@ -324,7 +324,7 @@ pub fn draw_app(f: &mut Frame, app: &mut App) {
 
   draw_account_table(f, &mut app.account_table, main_area);
 
-  let pop_rect = centered_rect(60, 30, main_area);
+  let pop_rect = centered_rect(60, 60, main_area);
   match app.mode {
     // AppMode::Table => {
     //   draw_account_table(f, &mut app.account_table, main_area, search_area);
