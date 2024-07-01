@@ -26,10 +26,10 @@ pub enum TecError {
   ClipboardPasteError(#[from] wl_clipboard_rs::paste::Error),
   #[error("clipboard copy error - {0}")]
   ClipboardCopyError(#[from] wl_clipboard_rs::copy::Error),
-  #[error("invalid input")]
-  InvalidInput,
-  #[error("password not match")]
-  PasswordNotMatch,
+  // #[error("invalid input")]
+  // InvalidInput,
+  // #[error("password not match")]
+  // PasswordNotMatch,
 }
 
 pub type TecResult<T> = Result<T, TecError>;

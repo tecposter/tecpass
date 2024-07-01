@@ -1,8 +1,7 @@
-use std::{env, fs::create_dir_all, io::stdout, path::Path, thread::sleep, time::Duration};
+use std::{env, fs::create_dir_all, path::Path, time::Duration};
 
 use argh::FromArgs;
 use common::TecResult;
-use ratatui::{backend::CrosstermBackend, widgets::Paragraph, Terminal};
 use tui::auth;
 
 mod cipher;
@@ -35,9 +34,12 @@ struct Cli {
   /// config path, default ~/.config/tecpass
   #[argh(option, default = "String::from(\"~/.config/tecpass\")")]
   config_path: String,
-  /// import firefox csv
+  /// import firefox accounts
   #[argh(option)]
-  import_firefox_csv: Option<String>,
+  import_firefox: Option<String>,
+  /// import pass accounts
+  #[argh(option)]
+  import_pass: Option<String>,
 }
 
 fn parse_config_path(path: &str) -> String {
@@ -62,7 +64,7 @@ fn main() -> TecResult<()> {
     return Ok(());
   }
 
-  if let Some(csv_path) = cli.import_firefox_csv {
+  if let Some(csv_path) = cli.import_firefox {
     let db_path = Path::new(&config_path)
       .join("tecpass.db")
       .to_str()
@@ -70,7 +72,17 @@ fn main() -> TecResult<()> {
       .to_owned();
     let key_bytes = key.unwrap();
     import::import_firefox_accounts(csv_path, db_path, &key_bytes)?;
-    // import_firefox(import_firefox_csv)?;
+    return Ok(());
+  }
+
+  if let Some(src_path) = cli.import_pass {
+    let db_path = Path::new(&config_path)
+      .join("tecpass.db")
+      .to_str()
+      .unwrap()
+      .to_owned();
+    let key_bytes = key.unwrap();
+    import::import_pass_accounts(src_path, db_path, &key_bytes)?;
     return Ok(());
   }
   // let tick_rate = Duration::from_millis(200);
@@ -80,21 +92,21 @@ fn main() -> TecResult<()> {
   Ok(())
 }
 
-fn import_firefox(csv_path: String) -> TecResult<()> {
-  println!("{csv_path}");
-
-  let backend = CrosstermBackend::new(stdout());
-  let mut terminal = Terminal::with_options(
-    backend,
-    ratatui::TerminalOptions {
-      viewport: ratatui::Viewport::Inline(3),
-    },
-  )?;
-  terminal.draw(|frame| {
-    let area = frame.size();
-    frame.render_widget(Paragraph::new("Hello World!"), area);
-    frame.set_cursor(area.x, area.y);
-  })?;
-  sleep(Duration::from_secs(10));
-  Ok(())
-}
+// fn import_firefox(csv_path: String) -> TecResult<()> {
+//   println!("{csv_path}");
+//
+//   let backend = CrosstermBackend::new(stdout());
+//   let mut terminal = Terminal::with_options(
+//     backend,
+//     ratatui::TerminalOptions {
+//       viewport: ratatui::Viewport::Inline(3),
+//     },
+//   )?;
+//   terminal.draw(|frame| {
+//     let area = frame.size();
+//     frame.render_widget(Paragraph::new("Hello World!"), area);
+//     frame.set_cursor(area.x, area.y);
+//   })?;
+//   sleep(Duration::from_secs(10));
+//   Ok(())
+// }

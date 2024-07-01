@@ -13,11 +13,25 @@ use crate::{
 
 use super::{draw_input, Input};
 
+#[derive(Clone, Copy)]
 enum FormMode {
-  Url,
+  Url = 0,
   Username,
   Password,
   Confirm,
+}
+
+impl FormMode {
+  fn next(self) -> Self {
+    let x = (self as i8 + 1) % 4;
+    let item = unsafe { std::mem::transmute(x) };
+    item
+  }
+  fn prev(self) -> Self {
+    let x = (self as i8 - 1 + 4) % 4;
+    let item = unsafe { std::mem::transmute(x) };
+    item
+  }
 }
 
 pub struct Form {
@@ -26,6 +40,7 @@ pub struct Form {
   username: Input,
   password: Input,
   confirm: Input,
+  // is_editing: bool,
 }
 
 impl Default for Form {
@@ -47,6 +62,7 @@ impl Default for Form {
         .with_label("confirm: ")
         .with_min(8)
         .with_max(32),
+      // is_editing: false,
     }
   }
 }
@@ -62,54 +78,73 @@ impl Form {
       } => {
         self.password.toggle_mask();
         self.confirm.toggle_mask();
-        return Ok(());
       }
       KeyEvent {
         kind: KeyEventKind::Press,
-        code,
+        modifiers: KeyModifiers::CONTROL,
+        code: KeyCode::Char('j'),
         ..
-      } => match code {
-        KeyCode::Tab => {
-          self.switch_mode();
-          return Ok(());
-        }
-        _ => {}
+      }
+      | KeyEvent {
+        code: KeyCode::Down,
+        kind: KeyEventKind::Press,
+        ..
+      }
+      | KeyEvent {
+        code: KeyCode::Tab,
+        kind: KeyEventKind::Press,
+        ..
+      } => {
+        self.next_mode();
+      }
+      KeyEvent {
+        kind: KeyEventKind::Press,
+        modifiers: KeyModifiers::CONTROL,
+        code: KeyCode::Char('k'),
+        ..
+      }
+      | KeyEvent {
+        code: KeyCode::Up,
+        kind: KeyEventKind::Press,
+        ..
+      } => {
+        self.prev_mode();
+      }
+      _ => match self.mode {
+        FormMode::Url => self.url.on_key_event(key_event)?,
+        FormMode::Username => self.username.on_key_event(key_event)?,
+        FormMode::Password => self.password.on_key_event(key_event)?,
+        FormMode::Confirm => self.confirm.on_key_event(key_event)?,
       },
-      _ => {}
     }
 
-    match self.mode {
-      FormMode::Url => self.url.on_key_event(key_event)?,
-      FormMode::Username => self.username.on_key_event(key_event)?,
-      FormMode::Password => self.password.on_key_event(key_event)?,
-      FormMode::Confirm => self.confirm.on_key_event(key_event)?,
-    }
     Ok(())
   }
 
-  fn switch_mode(&mut self) {
+  fn deactivate_all(&mut self) {
+    self.url.deactivate();
+    self.username.deactivate();
+    self.password.deactivate();
+    self.confirm.deactivate();
+  }
+
+  fn switch_inputs(&mut self) {
+    self.deactivate_all();
     match self.mode {
-      FormMode::Url => {
-        self.mode = FormMode::Username;
-        self.url.deactivate();
-        self.username.activate();
-      }
-      FormMode::Username => {
-        self.mode = FormMode::Password;
-        self.username.deactivate();
-        self.password.activate();
-      }
-      FormMode::Password => {
-        self.mode = FormMode::Confirm;
-        self.password.deactivate();
-        self.confirm.activate();
-      }
-      FormMode::Confirm => {
-        self.mode = FormMode::Url;
-        self.confirm.deactivate();
-        self.url.activate();
-      }
+      FormMode::Url => self.url.activate(),
+      FormMode::Username => self.username.activate(),
+      FormMode::Password => self.password.activate(),
+      FormMode::Confirm => self.confirm.activate(),
     }
+  }
+
+  fn prev_mode(&mut self) {
+    self.mode = self.mode.prev();
+    self.switch_inputs();
+  }
+  fn next_mode(&mut self) {
+    self.mode = self.mode.next();
+    self.switch_inputs();
   }
 
   pub fn validate(&mut self) -> bool {
@@ -164,10 +199,22 @@ impl Form {
     }
     Ok(())
   }
+
+  // pub(crate) fn is_editing(&self) -> bool {
+  //   self.is_editing
+  // }
 }
 
 pub fn draw_form(f: &mut Frame, form: &Form, area: Rect) {
   f.render_widget(Clear, area);
+
+  // let title = {
+  //   if form.is_editing {
+  //     "Account (edit)"
+  //   } else {
+  //     "Account"
+  //   }
+  // };
 
   let block = Block::default()
     .title("Account")

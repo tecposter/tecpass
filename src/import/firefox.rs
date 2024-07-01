@@ -3,25 +3,18 @@ use std::{path::Path, rc::Rc, usize};
 use crate::{
   cipher::AesCipher,
   common::TecResult,
-  db::{sqlite_conn, KeyStore},
+  db::sqlite_conn,
   model::{Account, Pwd},
   repo::{AccountRepo, PwdRepo},
 };
 
 pub fn import_firefox_accounts<P: AsRef<Path>>(
   csv_path: P,
-  // key_path: P,
   db_path: P,
   key: &[u8],
-  // pwd: &str,
-  // conn: &rusqlite::Connection,
 ) -> TecResult<()> {
   let conn = Rc::new(sqlite_conn(db_path)?);
   let mut rdr = csv::Reader::from_path(csv_path)?;
-  // let pwd_repo = get_pwd_repo(key_path, pwd, conn)?;
-
-  // let key_store = KeyStore::new(key_path);
-  // let aes_key = key_store.get_key(pwd.as_bytes())?;
   let aes_cipher = Rc::new(AesCipher::from_slice(key)?);
 
   let account_repo = AccountRepo::new(conn.clone(), aes_cipher.clone());
@@ -88,16 +81,16 @@ pub fn import_firefox_accounts<P: AsRef<Path>>(
   Ok(())
 }
 
-fn get_pwd_repo<'a, P: AsRef<Path>>(
-  key_path: P,
-  pwd: &str,
-  conn: Rc<rusqlite::Connection>,
-) -> TecResult<PwdRepo> {
-  // let key_store = KeyStore::new(key_path);
-  let key_store = KeyStore::new(key_path);
-  let aes_key = key_store.get_key(pwd.as_bytes())?;
-  let aes_cipher = Rc::new(AesCipher::from_slice(&aes_key)?);
-  let pwd_repo = PwdRepo::new(conn, aes_cipher);
-
-  Ok(pwd_repo)
-}
+// fn get_pwd_repo<'a, P: AsRef<Path>>(
+//   key_path: P,
+//   pwd: &str,
+//   conn: Rc<rusqlite::Connection>,
+// ) -> TecResult<PwdRepo> {
+//   // let key_store = KeyStore::new(key_path);
+//   let key_store = KeyStore::new(key_path);
+//   let aes_key = key_store.get_key(pwd.as_bytes())?;
+//   let aes_cipher = Rc::new(AesCipher::from_slice(&aes_key)?);
+//   let pwd_repo = PwdRepo::new(conn, aes_cipher);
+//
+//   Ok(pwd_repo)
+// }

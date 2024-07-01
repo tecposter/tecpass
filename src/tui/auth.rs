@@ -25,7 +25,7 @@ pub struct Auth {
 
 impl Auth {
   pub fn build(config_path: impl AsRef<Path>) -> TecResult<Self> {
-    let key_path = config_path.as_ref().join("tecpass.pub.key");
+    let key_path = config_path.as_ref().join("tecpass.sealed.key");
 
     let key_store = KeyStore::new(key_path);
     let mode = {

@@ -98,38 +98,7 @@ impl App {
   }
 
   fn table_on_key_envent(&mut self, key_event: KeyEvent) -> TecResult<()> {
-    self.account_table.on_key_event(key_event)?;
     if !self.account_table.is_querying() {
-      // match key_event {
-      //   KeyEvent {
-      //     code: KeyCode::Enter | KeyCode::Char('l'),
-      //     kind: KeyEventKind::Press,
-      //     ..
-      //   } => {
-      //     if let Some(account) = self.account_table.selected() {
-      //       self.view.load_account(account.clone());
-      //       let pwds = self.pwd_repo.query(account.id)?;
-      //       self.view.load_pwds(pwds);
-      //       self.change_mode(AppMode::View);
-      //     }
-      //   }
-      //   KeyEvent {
-      //     code: KeyCode::Char('a'),
-      //     kind: KeyEventKind::Press,
-      //     ..
-      //   } => {
-      //     self.change_mode(AppMode::Add);
-      //   }
-      //   KeyEvent {
-      //     code: KeyCode::Char('c'),
-      //     kind: KeyEventKind::Press,
-      //     ..
-      //   } => {
-      //     self.copy()?;
-      //   }
-      //   _ => {}
-      // }
-
       match key_event {
         KeyEvent {
           code,
@@ -166,7 +135,7 @@ impl App {
         _ => {}
       }
     }
-    // self.help_text = "table".to_owned();
+    self.account_table.on_key_event(key_event)?;
     Ok(())
   }
 
@@ -224,9 +193,7 @@ impl App {
           self.change_mode(AppMode::Table);
         }
       }
-      _ => {
-        self.form.on_key_event(key_event)?;
-      }
+      _ => self.form.on_key_event(key_event)?,
     }
     Ok(())
   }
@@ -239,6 +206,7 @@ impl App {
         ..
       } => {
         self.change_mode(AppMode::Table);
+        return Ok(());
       }
       KeyEvent {
         code: KeyCode::Enter,
@@ -272,11 +240,10 @@ impl App {
             self.form.reset();
             self.change_mode(AppMode::Table);
           }
+          return Ok(());
         }
       }
-      _ => {
-        self.form.on_key_event(key_event)?;
-      }
+      _ => self.form.on_key_event(key_event)?,
     }
     Ok(())
   }
@@ -316,16 +283,16 @@ impl App {
             .to_owned()
       }
       AppMode::View => {
-        self.help_text = "View Account - c: copy, x: show/hide passwords, q/esc: back".to_owned()
+        self.help_text = "View Account - c: copy, j: next, k: prev, x: show/hide passwords, q/esc: back".to_owned()
       }
       AppMode::Add => {
         self.help_text =
-          "Eidt Account - ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
+          "Eidt Account - down/ctrl-j: next, up/ctrl-k: prev, ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
       }
       AppMode::Del => self.help_text = "Delete Account - esc: back".to_owned(),
       AppMode::Edit => {
         self.help_text =
-          "Edit Account - ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
+          "Edit Account - ctrl-j: next, ctrl-k: prev, ctrl-x: show/hide passwords, ctrl-v: paste, esc: back".to_owned()
       }
     }
   }

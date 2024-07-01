@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
   layout::{Constraint, Layout, Rect},
-  style::{Style, Stylize},
+  style::{Color, Style, Stylize},
   widgets::{Block, Row, Table, TableState},
   Frame,
 };
@@ -93,7 +93,6 @@ pub struct AccountTable {
   state: TableState,
   query_content: String,
   symbol: String,
-  // pub is_filtering: bool,
 }
 
 impl Default for AccountTable {
@@ -104,7 +103,6 @@ impl Default for AccountTable {
       state: TableState::default().with_selected(Some(0)),
       query_content: "".to_owned(),
       symbol: "❯".into(),
-      // is_filtering: false,
     }
   }
 }
@@ -133,7 +131,6 @@ impl AccountTable {
         } => match code {
           KeyCode::Down | KeyCode::Char('j') => self.next(),
           KeyCode::Up | KeyCode::Char('k') => self.prev(),
-          // KeyCode::Enter | KeyCode::Char('l') => self.select(),
           KeyCode::Char('/') => self.query.activate(),
           _ => {}
         },
@@ -169,53 +166,7 @@ impl AccountTable {
     }
   }
 
-  // fn select(&self) {
-  //   todo!()
-  // }
-
-  // pub fn enter_char(&mut self, ch: char) {
-  //   self.query.enter_char(ch);
-  //   self.items.filter(self.query.text());
-  //   self.state.select(Some(0));
-  // }
-
-  // pub fn delete_char(&mut self) {
-  //   self.query.delete_char();
-  //   self.items.filter(self.query.text());
-  //   self.state.select(Some(0));
-  // }
-
-  // pub(crate) fn on_key_press(&mut self, key: crossterm::event::KeyEvent) -> TecResult<()> {
-  //   if !self.query.is_active {
-  //     match key.code {
-  //       KeyCode::Down | KeyCode::Char('j') => self.next(),
-  //       KeyCode::Up | KeyCode::Char('k') => self.prev(),
-  //       KeyCode::Char('/') => self.query.active(),
-  //       _ => {}
-  //     }
-  //   } else {
-  //     match key.code {
-  //       KeyCode::Esc | KeyCode::Enter => self.query.deactive(),
-  //       KeyCode::Char(ch) => self.enter_char(ch),
-  //       KeyCode::Backspace => self.delete_char(),
-  //       KeyCode::Left => self.query.move_cursor_left(),
-  //       KeyCode::Right => self.query.move_cursor_right(),
-  //       _ => {}
-  //     }
-  //   }
-  //   Ok(())
-  // }
-
-  // pub fn help_text(&self) -> String {
-  //   if !self.query.is_active() {
-  //     "Down, j: next; Up, k: prev; /: filter".to_owned()
-  //   } else {
-  //     "Esc, Enter: quit filter".to_owned()
-  //   }
-  // }
-
   pub(crate) fn selected(&mut self) -> Option<&Account> {
-    // println!("xxxxxxxxxxxxxxxxxx  {:?}", self.state.selected());
     if let Some(index) = self.state.selected() {
       self.symbol = "✔".into();
       self.items.get(index)
@@ -241,7 +192,9 @@ pub fn draw_account_table(f: &mut Frame, at: &mut AccountTable, area: Rect) {
   let table = Table::new(rows, widths)
     .column_spacing(1)
     .style(Style::new().blue())
-    .header(Row::new(vec!["url", "username"]))
+    .header(
+      Row::new(vec!["url", "username"]).style(Style::new().bg(Color::LightYellow).fg(Color::Black)),
+    )
     .style(Style::new().bold())
     .block(Block::default())
     .highlight_style(Style::new().reversed())
