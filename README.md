@@ -54,7 +54,7 @@ tecpass
 
 ### Import Firefox accounts
 
-Open logins page <about:logins>, click the right top button `...`, select the menu item `Export Passwords`, and then select a path to save all the firefox passwords in a csv file.
+Open page `about:logins`, click the right top button `...`, select the menu item `Export Passwords`, and then select a path to save all the firefox passwords in a csv file.
 
 After getting the csv file path, run the following command to import the firefox accounts
 ```shell
@@ -64,6 +64,10 @@ tecpass --import-firefox ./data/firefox-passwords.csv
 ### Import pass accounts
 
 Goto the `tecpass` project folder to run the script `./script/export-pass.sh` to export `pass` accounts to the file `exported_passes`. `pass` will need passphrase to unlock the OpenPGP secret key.
+
+```shell
+./script/export-pass.sh
+```
 
 Then run the following command to import the `pass` accounts
 
